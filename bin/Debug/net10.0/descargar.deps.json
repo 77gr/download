@@ -1,0 +1,268 @@
+{
+  "runtimeTarget": {
+    "name": ".NETCoreApp,Version=v10.0",
+    "signature": ""
+  },
+  "compilationOptions": {},
+  "targets": {
+    ".NETCoreApp,Version=v10.0": {
+      "descargar/1.0.0": {
+        "dependencies": {
+          "CliWrap": "3.10.2",
+          "Discord.Net": "3.20.0",
+          "YoutubeExplode": "6.6.0"
+        },
+        "runtime": {
+          "descargar.dll": {}
+        }
+      },
+      "AngleSharp/1.4.0": {
+        "runtime": {
+          "lib/net10.0/AngleSharp.dll": {
+            "assemblyVersion": "1.4.0.0",
+            "fileVersion": "1.4.0.0"
+          }
+        }
+      },
+      "CliWrap/3.10.2": {
+        "runtime": {
+          "lib/net10.0/CliWrap.dll": {
+            "assemblyVersion": "3.10.2.0",
+            "fileVersion": "3.10.2.0"
+          }
+        }
+      },
+      "Discord.Net/3.20.0": {
+        "dependencies": {
+          "Discord.Net.Commands": "3.20.0",
+          "Discord.Net.Core": "3.20.0",
+          "Discord.Net.Interactions": "3.20.0",
+          "Discord.Net.Rest": "3.20.0",
+          "Discord.Net.WebSocket": "3.20.0",
+          "Discord.Net.Webhook": "3.20.0"
+        }
+      },
+      "Discord.Net.Commands/3.20.0": {
+        "dependencies": {
+          "Discord.Net.Core": "3.20.0",
+          "Microsoft.Extensions.DependencyInjection.Abstractions": "10.0.0"
+        },
+        "runtime": {
+          "lib/net10.0/Discord.Net.Commands.dll": {
+            "assemblyVersion": "3.20.0.0",
+            "fileVersion": "3.20.0.0"
+          }
+        }
+      },
+      "Discord.Net.Core/3.20.0": {
+        "dependencies": {
+          "Newtonsoft.Json": "13.0.4"
+        },
+        "runtime": {
+          "lib/net10.0/Discord.Net.Core.dll": {
+            "assemblyVersion": "3.20.0.0",
+            "fileVersion": "3.20.0.0"
+          }
+        }
+      },
+      "Discord.Net.Dave/3.20.0": {
+        "runtime": {
+          "lib/net10.0/Discord.Net.Dave.dll": {
+            "assemblyVersion": "3.20.0.0",
+            "fileVersion": "3.20.0.0"
+          }
+        }
+      },
+      "Discord.Net.Interactions/3.20.0": {
+        "dependencies": {
+          "Discord.Net.Core": "3.20.0",
+          "Discord.Net.Rest": "3.20.0",
+          "Microsoft.Extensions.DependencyInjection.Abstractions": "10.0.0"
+        },
+        "runtime": {
+          "lib/net10.0/Discord.Net.Interactions.dll": {
+            "assemblyVersion": "3.20.0.0",
+            "fileVersion": "3.20.0.0"
+          }
+        }
+      },
+      "Discord.Net.Rest/3.20.0": {
+        "dependencies": {
+          "Discord.Net.Core": "3.20.0"
+        },
+        "runtime": {
+          "lib/net10.0/Discord.Net.Rest.dll": {
+            "assemblyVersion": "3.20.0.0",
+            "fileVersion": "3.20.0.0"
+          }
+        }
+      },
+      "Discord.Net.Webhook/3.20.0": {
+        "dependencies": {
+          "Discord.Net.Core": "3.20.0",
+          "Discord.Net.Rest": "3.20.0"
+        },
+        "runtime": {
+          "lib/net10.0/Discord.Net.Webhook.dll": {
+            "assemblyVersion": "3.20.0.0",
+            "fileVersion": "3.20.0.0"
+          }
+        }
+      },
+      "Discord.Net.WebSocket/3.20.0": {
+        "dependencies": {
+          "Discord.Net.Core": "3.20.0",
+          "Discord.Net.Dave": "3.20.0",
+          "Discord.Net.Rest": "3.20.0"
+        },
+        "runtime": {
+          "lib/net10.0/Discord.Net.WebSocket.dll": {
+            "assemblyVersion": "3.20.0.0",
+            "fileVersion": "3.20.0.0"
+          }
+        }
+      },
+      "JsonExtensions/1.2.0": {
+        "runtime": {
+          "lib/net5.0/JsonExtensions.dll": {
+            "assemblyVersion": "1.2.0.0",
+            "fileVersion": "1.2.0.0"
+          }
+        }
+      },
+      "Microsoft.Extensions.DependencyInjection.Abstractions/10.0.0": {
+        "runtime": {
+          "lib/net10.0/Microsoft.Extensions.DependencyInjection.Abstractions.dll": {
+            "assemblyVersion": "10.0.0.0",
+            "fileVersion": "10.0.25.52411"
+          }
+        }
+      },
+      "Newtonsoft.Json/13.0.4": {
+        "runtime": {
+          "lib/net6.0/Newtonsoft.Json.dll": {
+            "assemblyVersion": "13.0.0.0",
+            "fileVersion": "13.0.4.30916"
+          }
+        }
+      },
+      "YoutubeExplode/6.6.0": {
+        "dependencies": {
+          "AngleSharp": "1.4.0",
+          "JsonExtensions": "1.2.0"
+        },
+        "runtime": {
+          "lib/net10.0/YoutubeExplode.dll": {
+            "assemblyVersion": "6.6.0.0",
+            "fileVersion": "6.6.0.0"
+          }
+        }
+      }
+    }
+  },
+  "libraries": {
+    "descargar/1.0.0": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
+    },
+    "AngleSharp/1.4.0": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-6ph8mpaQx0KL0COYRt0kI8MB9gSp1PtKijKMhJU//+aVFgKAJLKDesG/+26JSaVCOrHNgPf12wpfoyRcMYOeXg==",
+      "path": "anglesharp/1.4.0",
+      "hashPath": "anglesharp.1.4.0.nupkg.sha512"
+    },
+    "CliWrap/3.10.2": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-oW63Lh5Tr2dVRnGSn5UyV2ITAYTdyaGB8r4pGMcz7CwfzketV7ANyn2LvNJtOjXjL/tJbG0qDH8Xwgt3jgGMNg==",
+      "path": "cliwrap/3.10.2",
+      "hashPath": "cliwrap.3.10.2.nupkg.sha512"
+    },
+    "Discord.Net/3.20.0": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-IoFRh0OxXxipbtOMUVBiXH1g0R4QWgfF8/Bez5sFDS4MiZRQcP1Nu5cDkLjBMyeFOWmh4ggjtgJ8nxjWPkZwUw==",
+      "path": "discord.net/3.20.0",
+      "hashPath": "discord.net.3.20.0.nupkg.sha512"
+    },
+    "Discord.Net.Commands/3.20.0": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-iUS4yeIXvqKVFxSRWCpgoWf9/vXEYWO7/y72384SUR3LvAZE+DHOJ5aHB7OYL1Ca7UKT/+qPSS2Otif96ZKGZg==",
+      "path": "discord.net.commands/3.20.0",
+      "hashPath": "discord.net.commands.3.20.0.nupkg.sha512"
+    },
+    "Discord.Net.Core/3.20.0": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-4ZilhTFBsKAF1D3ci83CoyDxH4NsCioXE46xUWWmq4fpFbmHPyl0jKHHpqIURunW2CMJp2V3Z6m8cDD48uf1Sw==",
+      "path": "discord.net.core/3.20.0",
+      "hashPath": "discord.net.core.3.20.0.nupkg.sha512"
+    },
+    "Discord.Net.Dave/3.20.0": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-sfGe94kAitoI4Q5vvhqYDdaelMir0PDZGstuTJYDgds1qqX2v1/fK6aGNvwKWrHDvdht9id7E/Qrrx5UVQgFYw==",
+      "path": "discord.net.dave/3.20.0",
+      "hashPath": "discord.net.dave.3.20.0.nupkg.sha512"
+    },
+    "Discord.Net.Interactions/3.20.0": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-ITCweiDdDVQqjx/p+3kOeWm9XH5/TmAhczmbQiMeq6qETl0RqRpHVwaEw/aeKQrHUeoZOOC9Q8se84pTkzbejA==",
+      "path": "discord.net.interactions/3.20.0",
+      "hashPath": "discord.net.interactions.3.20.0.nupkg.sha512"
+    },
+    "Discord.Net.Rest/3.20.0": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-THBtm514hdtFht94DY1VV4v1tpPfLAmwbigFvtPc0xHh/YG0XkcTXhDd2bqyrrlZpS97WDQbiLhieuVbbQIfeg==",
+      "path": "discord.net.rest/3.20.0",
+      "hashPath": "discord.net.rest.3.20.0.nupkg.sha512"
+    },
+    "Discord.Net.Webhook/3.20.0": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-+c1YBcHmJlBhoEm7FeYyEHMmuWC12ikvRcw4geABgo8PMoYp5oC0gd0h3PvPB5ja32Lea2xlJ+TEZOrkc3q//A==",
+      "path": "discord.net.webhook/3.20.0",
+      "hashPath": "discord.net.webhook.3.20.0.nupkg.sha512"
+    },
+    "Discord.Net.WebSocket/3.20.0": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-xr45glg3lAfSCwepoC2pqX6AygbLXLQrAXq3Zab/pymooFicDp8cjPT803qn4tRk8ZY8OMIUTQrIjwFcw2vXMg==",
+      "path": "discord.net.websocket/3.20.0",
+      "hashPath": "discord.net.websocket.3.20.0.nupkg.sha512"
+    },
+    "JsonExtensions/1.2.0": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-ujtrK6m5BQVQLEteLfl54upN7Z59c1ZqEKmU3OlYriqnV74dIgIlNM2vkcgn2AuZEItQDNORD/2H1biI/asOdg==",
+      "path": "jsonextensions/1.2.0",
+      "hashPath": "jsonextensions.1.2.0.nupkg.sha512"
+    },
+    "Microsoft.Extensions.DependencyInjection.Abstractions/10.0.0": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-L3AdmZ1WOK4XXT5YFPEwyt0ep6l8lGIPs7F5OOBZc77Zqeo01Of7XXICy47628sdVl0v/owxYJTe86DTgFwKCA==",
+      "path": "microsoft.extensions.dependencyinjection.abstractions/10.0.0",
+      "hashPath": "microsoft.extensions.dependencyinjection.abstractions.10.0.0.nupkg.sha512"
+    },
+    "Newtonsoft.Json/13.0.4": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-pdgNNMai3zv51W5aq268sujXUyx7SNdE2bj1wZcWjAQrKMFZV260lbqYop1d2GM67JI1huLRwxo9ZqnfF/lC6A==",
+      "path": "newtonsoft.json/13.0.4",
+      "hashPath": "newtonsoft.json.13.0.4.nupkg.sha512"
+    },
+    "YoutubeExplode/6.6.0": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-DCFAmPvADs/ZB3pB24kLFzVY/1o6iECqJ7IL9LKi4zkSZLgcXDwFbOJe3vd2K3FBw36Xa3O/QMv10zelT7hjfA==",
+      "path": "youtubeexplode/6.6.0",
+      "hashPath": "youtubeexplode.6.6.0.nupkg.sha512"
+    }
+  }
+}
