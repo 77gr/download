@@ -1,0 +1,12 @@
+bin/
+obj/
+out/
+*.user
+*.log
+.vs/
+.vscode/
+download_remote/
+download_remote_https/
+*.exe
+*.pdb
+*.dll
