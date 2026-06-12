@@ -68,13 +68,32 @@ class Program
 
         private static YoutubeClient CreateYoutubeClient()
     {
-        var httpClientHandler = new HttpClientHandler();
-        var httpClient = new HttpClient(httpClientHandler);
+        var httpClientHandler = new HttpClientHandler
+        {
+            AutomaticDecompression = System.Net.DecompressionMethods.GZip | System.Net.DecompressionMethods.Deflate,
+            AllowAutoRedirect = true,
+            UseCookies = true,
+            CookieContainer = new System.Net.CookieContainer()
+        };
         
-        httpClient.DefaultRequestHeaders.Add("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36");
-        httpClient.DefaultRequestHeaders.Add("Accept-Language", "en-US,en;q=0.9");
+        var httpClient = new HttpClient(httpClientHandler)
+        {
+            Timeout = TimeSpan.FromSeconds(30)
+        };
+        
+        // Headers que imitan navegador real Chrome en Windows
+        httpClient.DefaultRequestHeaders.Add("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36 Edg/130.0.0.0");
+        httpClient.DefaultRequestHeaders.Add("Accept-Language", "en-US,en;q=0.9,es;q=0.8");
         httpClient.DefaultRequestHeaders.Add("Accept-Encoding", "gzip, deflate, br");
-        httpClient.DefaultRequestHeaders.Add("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8");
+        httpClient.DefaultRequestHeaders.Add("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7");
+        httpClient.DefaultRequestHeaders.Add("DNT", "1");
+        httpClient.DefaultRequestHeaders.Add("Connection", "keep-alive");
+        httpClient.DefaultRequestHeaders.Add("Upgrade-Insecure-Requests", "1");
+        httpClient.DefaultRequestHeaders.Add("Sec-Fetch-Dest", "document");
+        httpClient.DefaultRequestHeaders.Add("Sec-Fetch-Mode", "navigate");
+        httpClient.DefaultRequestHeaders.Add("Sec-Fetch-Site", "none");
+        httpClient.DefaultRequestHeaders.Add("Pragma", "no-cache");
+        httpClient.DefaultRequestHeaders.Add("Cache-Control", "no-cache");
         
         if (!string.IsNullOrWhiteSpace(YOUTUBE_COOKIES))
         {
@@ -89,6 +108,10 @@ class Program
                     })
                     .ToArray();
 
+                foreach (var cookie in cookies)
+                    httpClientHandler.CookieContainer.Add(new Uri("https://www.youtube.com"), cookie);
+
+                Console.WriteLine($"✓ Cookies de YouTube cargadas ({cookies.Length} cookies)");
                 return new YoutubeClient(httpClient, cookies);
             }
             catch (Exception ex)
@@ -97,7 +120,7 @@ class Program
             }
         }
 
-        Console.WriteLine("WARNING: Iniciando YoutubeClient con HttpClient personalizado.");
+        Console.WriteLine("WARNING: Iniciando YoutubeClient en modo anónimo. Para mejores resultados, configura YOUTUBE_COOKIES.");
         return new YoutubeClient(httpClient);
     }
 
@@ -320,7 +343,7 @@ class Program
         var url = command.Data.Options.First().Value as string;
         if (string.IsNullOrEmpty(url) || (!url.Contains("youtube.com") && !url.Contains("youtu.be")))
         {
-            await SendErrorEmbedAsync(command, "URL Inv�lida", "Proporciona una URL v�lida de YouTube.");
+            await SendErrorEmbedAsync(command, "URL Inválida", "Proporciona una URL válida de YouTube.");
             return;
         }
 
@@ -329,15 +352,17 @@ class Program
             var videoId = ExtractVideoId(url);
             if (string.IsNullOrEmpty(videoId))
             {
-                await SendErrorEmbedAsync(command, "URL Inv�lida", "No se pudo extraer el ID del video.");
+                await SendErrorEmbedAsync(command, "URL Inválida", "No se pudo extraer el ID del video.");
                 return;
             }
 
-            var video = await _youtube!.Videos.GetAsync(videoId);
+            var video = await GetVideoWithRetryAsync(videoId);
+            if (video == null)
+                throw new Exception("No se pudo obtener información del video tras múltiples intentos.");
             
             var embed = new EmbedBuilder()
-                .WithTitle("?? Selecciona Formato y Calidad")
-                .WithDescription($"**{video.Title}**\n?? {video.Duration?.ToString(@"mm\:ss")} � ?? {video.Author.ChannelTitle}")
+                .WithTitle("🎬 Selecciona Formato y Calidad")
+                .WithDescription($"**{video.Title}**\n⏱️ {video.Duration?.ToString(@"mm\:ss")} • 👤 {video.Author.ChannelTitle}")
                 .WithThumbnailUrl(video.Thumbnails.FirstOrDefault()?.Url)
                 .WithColor(Color.Gold)
                 .Build();
@@ -345,13 +370,13 @@ class Program
             // Usar | como separador en lugar de _
             var menu = new SelectMenuBuilder()
                 .WithCustomId($"download|{command.User.Id}|{video.Id}")
-                .WithPlaceholder("??? Selecciona calidad...")
-                .AddOption("?? MP3 - Audio (Alta)", "mp3_high", "Mejor calidad disponible")
-                .AddOption("?? MP3 - Audio (Media)", "mp3_medium", "Calidad est�ndar")
-                .AddOption("?? MP4 - Video 1080p", "mp4_1080", "Alta definici�n")
-                .AddOption("?? MP4 - Video 720p", "mp4_720", "HD est�ndar")
-                .AddOption("?? MP4 - Video 480p", "mp4_480", "Calidad media")
-                .AddOption("?? MP4 - Video 360p", "mp4_360", "Para ahorrar datos");
+                .WithPlaceholder("🎚️ Selecciona calidad...")
+                .AddOption("🎵 MP3 - Audio (Alta)", "mp3_high", "Mejor calidad disponible")
+                .AddOption("🎵 MP3 - Audio (Media)", "mp3_medium", "Calidad estándar")
+                .AddOption("🎬 MP4 - Video 1080p", "mp4_1080", "Alta definición")
+                .AddOption("🎬 MP4 - Video 720p", "mp4_720", "HD estándar")
+                .AddOption("🎬 MP4 - Video 480p", "mp4_480", "Calidad media")
+                .AddOption("🎬 MP4 - Video 360p", "mp4_360", "Para ahorrar datos");
 
             var component = new ComponentBuilder()
                 .WithSelectMenu(menu)
@@ -361,7 +386,15 @@ class Program
         }
         catch (Exception ex)
         {
-            await SendErrorEmbedAsync(command, "Error", $"No se pudo obtener informaci�n del video: {ex.Message}");
+            var message = ex.Message switch
+            {
+                _ when ex.Message.Contains("Exceeded request rate limit") => 
+                    "🚫 YouTube está limitando las peticiones. Intenta de nuevo en unos minutos o configura `YOUTUBE_COOKIES` con cookies autenticadas.",
+                _ when ex.Message.Contains("Video watch page is broken") =>
+                    "⚠️ El video no es accesible. Puede estar privado, eliminado o geo-bloqueado. Intenta con cookies de YouTube (YOUTUBE_COOKIES).",
+                _ => $"❌ Error: {ex.Message}"
+            };
+            await SendErrorEmbedAsync(command, "Error al obtener video", message);
         }
     }
 
@@ -377,6 +410,31 @@ class Program
         
         match = Regex.Match(url, @"shorts/([^/?]+)");
         if (match.Success) return match.Groups[1].Value;
+        
+        return null;
+    }
+
+    private static async Task<Video?> GetVideoWithRetryAsync(string videoId, int maxRetries = 3)
+    {
+        for (int attempt = 1; attempt <= maxRetries; attempt++)
+        {
+            try
+            {
+                var video = await _youtube!.Videos.GetAsync(videoId);
+                return video;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Intento {attempt}/{maxRetries} fallido para obtener video {videoId}: {ex.Message}");
+                
+                if (attempt == maxRetries)
+                    throw;
+                
+                // Espera exponencial: 2s, 4s, 8s
+                int delayMs = (int)Math.Pow(2, attempt) * 1000;
+                await Task.Delay(delayMs);
+            }
+        }
         
         return null;
     }
@@ -473,18 +531,21 @@ class Program
     private static async Task ProcessDownloadAsync(DownloadRequest request, SocketMessageComponent? component)
     {
         var statusMessage = component != null 
-            ? await request.Channel.SendMessageAsync($"? Descargando **{request.VideoId}**...")
+            ? await request.Channel.SendMessageAsync($"⏳ Descargando **{request.VideoId}**...")
             : null;
 
         try
         {
-            // Verificar que el ID sea v�lido antes de usarlo
+            // Verificar que el ID sea válido antes de usarlo
             if (string.IsNullOrWhiteSpace(request.VideoId) || request.VideoId.Length < 10)
             {
-                throw new Exception($"ID de video inv�lido: '{request.VideoId}'");
+                throw new Exception($"ID de video inválido: '{request.VideoId}'");
             }
 
-            var video = await _youtube!.Videos.GetAsync(request.VideoId);
+            var video = await GetVideoWithRetryAsync(request.VideoId);
+            if (video == null)
+                throw new Exception("No se pudo obtener información del video tras múltiples intentos.");
+            
             var streamManifest = await _youtube.Videos.Streams.GetManifestAsync(request.VideoId);
             
             string filePath;
@@ -718,7 +779,7 @@ class Program
         
         if (string.IsNullOrWhiteSpace(url))
         {
-            await SendErrorEmbedAsync(command, "Error", "La URL no puede estar vac�a");
+            await SendErrorEmbedAsync(command, "Error", "La URL no puede estar vacía");
             return;
         }
         
@@ -727,11 +788,14 @@ class Program
             var videoId = ExtractVideoId(url);
             if (string.IsNullOrEmpty(videoId))
             {
-                await SendErrorEmbedAsync(command, "Error", "URL de YouTube inv�lida");
+                await SendErrorEmbedAsync(command, "Error", "URL de YouTube inválida");
                 return;
             }
 
-            var video = await _youtube!.Videos.GetAsync(videoId);
+            var video = await GetVideoWithRetryAsync(videoId);
+            if (video == null)
+                throw new Exception("No se pudo obtener información del video.");
+
             var thumbnail = calidad switch
             {
                 "max" => video.Thumbnails.OrderByDescending(t => t.Resolution.Width).FirstOrDefault(),
@@ -740,7 +804,7 @@ class Program
             };
 
             var embed = new EmbedBuilder()
-                .WithTitle("??? Miniatura del Video")
+                .WithTitle("🖼️ Miniatura del Video")
                 .WithDescription($"[{video.Title}]({video.Url})")
                 .WithImageUrl(thumbnail?.Url)
                 .WithColor(Color.Blue)
@@ -790,7 +854,7 @@ class Program
         var url = command.Data.Options.First().Value as string;
         if (string.IsNullOrEmpty(url))
         {
-            await SendErrorEmbedAsync(command, "Error", "URL no v�lida");
+            await SendErrorEmbedAsync(command, "Error", "URL no válida");
             return;
         }
         
@@ -803,16 +867,19 @@ class Program
                 return;
             }
 
-            var video = await _youtube!.Videos.GetAsync(videoId);
+            var video = await GetVideoWithRetryAsync(videoId);
+            if (video == null)
+                throw new Exception("No se pudo obtener información del video.");
+
             var embed = new EmbedBuilder()
-                .WithTitle("?? Informaci�n del Video")
+                .WithTitle("ℹ️ Información del Video")
                 .WithDescription($"**[{video.Title}]({video.Url})**")
-                .AddField("?? Autor", video.Author.ChannelTitle, true)
-                .AddField("?? Duraci�n", video.Duration?.ToString(@"mm\:ss") ?? "N/A", true)
-                .AddField("?? Fecha", video.UploadDate.ToString("dd/MM/yyyy"), true)
-                .AddField("??? Vistas", FormatNumber(video.Engagement.ViewCount), true)
-                .AddField("?? Likes", FormatNumber(video.Engagement.LikeCount), true)
-                .AddField("?? ID", $"`{video.Id}`", true)
+                .AddField("👤 Autor", video.Author.ChannelTitle, true)
+                .AddField("⏱️ Duración", video.Duration?.ToString(@"mm\:ss") ?? "N/A", true)
+                .AddField("📅 Fecha", video.UploadDate.ToString("dd/MM/yyyy"), true)
+                .AddField("👁️ Vistas", FormatNumber(video.Engagement.ViewCount), true)
+                .AddField("👍 Likes", FormatNumber(video.Engagement.LikeCount), true)
+                .AddField("🔗 ID", $"`{video.Id}`", true)
                 .WithThumbnailUrl(video.Thumbnails.FirstOrDefault()?.Url)
                 .WithColor(Color.Red)
                 .Build();
@@ -821,7 +888,15 @@ class Program
         }
         catch (Exception ex)
         {
-            await SendErrorEmbedAsync(command, "Error", ex.Message);
+            var message = ex.Message switch
+            {
+                _ when ex.Message.Contains("Exceeded request rate limit") => 
+                    "🚫 YouTube está limitando las peticiones. Intenta de nuevo en unos minutos.",
+                _ when ex.Message.Contains("Video watch page is broken") =>
+                    "⚠️ El video no es accesible. Puede estar privado, eliminado o geo-bloqueado.",
+                _ => ex.Message
+            };
+            await SendErrorEmbedAsync(command, "Error", message);
         }
     }
 
