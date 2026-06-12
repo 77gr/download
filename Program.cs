@@ -9,6 +9,7 @@ using YoutubeExplode.Playlists;
 using System;
 using System.IO;
 using System.Linq;
+using System.Net;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using System.Text.RegularExpressions;
@@ -24,9 +25,8 @@ class Program
     private static readonly string HistoryFile = "download_history.json";
     private static readonly string TempDirectory = "temp_downloads";
     
-    // ⚠️ REGENERA TU TOKEN - ESTÁ COMPROMETIDO
-    private static readonly string TOKEN = Environment.GetEnvironmentVariable("DISCORD_BOT_TOKEN") 
-        ?? "MTUxMjk5MDI0MTU3NTkzMTk2NA.Gje5Ws.7qYR13wEIYy8KmTll-ydVP3DfvrWIqjhzMjSmQ";
+    private static readonly string? TOKEN = Environment.GetEnvironmentVariable("DISCORD_BOT_TOKEN");
+    private static readonly string? YOUTUBE_COOKIES = Environment.GetEnvironmentVariable("YOUTUBE_COOKIES");
         
     private const long MAX_FILE_SIZE = 8 * 1024 * 1024;
     private const long MAX_FILE_SIZE_BOOST_TIER_3 = 100 * 1024 * 1024;
@@ -36,7 +36,13 @@ class Program
     {
         Directory.CreateDirectory(TempDirectory);
         
-        _youtube = new YoutubeClient();
+        if (string.IsNullOrWhiteSpace(TOKEN))
+        {
+            Console.WriteLine("ERROR: Debes configurar la variable de entorno DISCORD_BOT_TOKEN en Railway.");
+            return;
+        }
+        
+        _youtube = CreateYoutubeClient();
         _client = new DiscordSocketClient(new DiscordSocketConfig
         {
             GatewayIntents = GatewayIntents.Guilds | GatewayIntents.GuildMessages | GatewayIntents.MessageContent,
@@ -52,11 +58,38 @@ class Program
 
         LoadHistory();
 
-        await _client.LoginAsync(TokenType.Bot, TOKEN);
+        await _client.LoginAsync(TokenType.Bot, TOKEN!);
         await _client.StartAsync();
 
         Console.WriteLine("🤖 Bot Premium iniciado con todas las funciones!");
         await Task.Delay(-1);
+    }
+
+    private static YoutubeClient CreateYoutubeClient()
+    {
+        if (!string.IsNullOrWhiteSpace(YOUTUBE_COOKIES))
+        {
+            try
+            {
+                var cookies = YOUTUBE_COOKIES.Split(';', StringSplitOptions.RemoveEmptyEntries)
+                    .Select(cookie => cookie.Trim())
+                    .Select(cookie =>
+                    {
+                        var parts = cookie.Split('=', 2);
+                        return new Cookie(parts[0].Trim(), parts.Length > 1 ? parts[1].Trim() : string.Empty, "/", ".youtube.com");
+                    })
+                    .ToArray();
+
+                return new YoutubeClient(cookies);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"WARNING: No se pudieron parsear las cookies de YouTube: {ex.Message}");
+            }
+        }
+
+        Console.WriteLine("WARNING: Iniciando YoutubeClient en modo anónimo. Esto puede causar límites de tasa.");
+        return new YoutubeClient();
     }
 
     private static Task LogAsync(LogMessage log)
@@ -266,7 +299,10 @@ class Program
         }
         catch (Exception ex)
         {
-            await SendErrorEmbedAsync(command, "Error de búsqueda", ex.Message);
+            var message = ex.Message.Contains("Exceeded request rate limit")
+                ? "YouTube está limitando las peticiones. Intenta de nuevo más tarde o configura `YOUTUBE_COOKIES` con cookies de un usuario autenticado."
+                : ex.Message;
+            await SendErrorEmbedAsync(command, "Error de búsqueda", message);
         }
     }
 
@@ -520,7 +556,10 @@ class Program
         catch (Exception ex)
         {
             Console.WriteLine($"Error en descarga: {ex}");
-            await request.Channel.SendMessageAsync($"❌ Error en la descarga: {ex.Message}");
+            var userMessage = ex.Message.Contains("Exceeded request rate limit")
+                ? "❌ YouTube está limitando las peticiones. Intenta de nuevo más tarde o configura `YOUTUBE_COOKIES` con cookies de un usuario autenticado."
+                : $"❌ Error en la descarga: {ex.Message}";
+            await request.Channel.SendMessageAsync(userMessage);
             if (statusMessage != null)
                 await statusMessage.DeleteAsync();
         }
