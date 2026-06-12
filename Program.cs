@@ -15,6 +15,7 @@ using System.Threading.Tasks;
 using System.Text.RegularExpressions;
 using Newtonsoft.Json;
 
+
 class Program
 {
     private static DiscordSocketClient? _client;
@@ -61,12 +62,20 @@ class Program
         await _client.LoginAsync(TokenType.Bot, TOKEN!);
         await _client.StartAsync();
 
-        Console.WriteLine("🤖 Bot Premium iniciado con todas las funciones!");
+        Console.WriteLine("?? Bot Premium iniciado con todas las funciones!");
         await Task.Delay(-1);
     }
 
-    private static YoutubeClient CreateYoutubeClient()
+        private static YoutubeClient CreateYoutubeClient()
     {
+        var httpClientHandler = new HttpClientHandler();
+        var httpClient = new HttpClient(httpClientHandler);
+        
+        httpClient.DefaultRequestHeaders.Add("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36");
+        httpClient.DefaultRequestHeaders.Add("Accept-Language", "en-US,en;q=0.9");
+        httpClient.DefaultRequestHeaders.Add("Accept-Encoding", "gzip, deflate, br");
+        httpClient.DefaultRequestHeaders.Add("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8");
+        
         if (!string.IsNullOrWhiteSpace(YOUTUBE_COOKIES))
         {
             try
@@ -80,7 +89,7 @@ class Program
                     })
                     .ToArray();
 
-                return new YoutubeClient(cookies);
+                return new YoutubeClient(httpClient, cookies);
             }
             catch (Exception ex)
             {
@@ -88,8 +97,8 @@ class Program
             }
         }
 
-        Console.WriteLine("WARNING: Iniciando YoutubeClient en modo anónimo. Esto puede causar límites de tasa.");
-        return new YoutubeClient();
+        Console.WriteLine("WARNING: Iniciando YoutubeClient con HttpClient personalizado.");
+        return new YoutubeClient(httpClient);
     }
 
     private static Task LogAsync(LogMessage log)
@@ -106,14 +115,14 @@ class Program
         {
             new SlashCommandBuilder()
                 .WithName("download")
-                .WithDescription("Descarga video o audio con menú de calidad")
+                .WithDescription("Descarga video o audio con men� de calidad")
                 .AddOption("url", ApplicationCommandOptionType.String, "URL de YouTube", isRequired: true)
                 .Build(),
 
             new SlashCommandBuilder()
                 .WithName("search")
                 .WithDescription("Busca videos con botones de descarga")
-                .AddOption("query", ApplicationCommandOptionType.String, "Término de búsqueda", isRequired: true)
+                .AddOption("query", ApplicationCommandOptionType.String, "T�rmino de b�squeda", isRequired: true)
                 .Build(),
 
             new SlashCommandBuilder()
@@ -124,7 +133,7 @@ class Program
 
             new SlashCommandBuilder()
                 .WithName("info")
-                .WithDescription("Información detallada del video")
+                .WithDescription("Informaci�n detallada del video")
                 .AddOption("url", ApplicationCommandOptionType.String, "URL del video", isRequired: true)
                 .Build(),
 
@@ -140,18 +149,18 @@ class Program
 
             new SlashCommandBuilder()
                 .WithName("stats")
-                .WithDescription("Estadísticas completas del servidor")
+                .WithDescription("Estad�sticas completas del servidor")
                 .Build(),
 
             new SlashCommandBuilder()
                 .WithName("top")
-                .WithDescription("Top 10 videos más descargados")
+                .WithDescription("Top 10 videos m�s descargados")
                 .Build(),
 
             new SlashCommandBuilder()
                 .WithName("lyrics")
                 .WithDescription("Busca letras de canciones")
-                .AddOption("cancion", ApplicationCommandOptionType.String, "Nombre de la canción", isRequired: true)
+                .AddOption("cancion", ApplicationCommandOptionType.String, "Nombre de la canci�n", isRequired: true)
                 .AddOption("artista", ApplicationCommandOptionType.String, "Nombre del artista", isRequired: false)
                 .Build(),
 
@@ -176,11 +185,11 @@ class Program
         try
         {
             await _client!.BulkOverwriteGlobalApplicationCommandsAsync(commands.ToArray());
-            Console.WriteLine($"✅ {commands.Count} comandos registrados!");
+            Console.WriteLine($"? {commands.Count} comandos registrados!");
         }
         catch (HttpException ex)
         {
-            Console.WriteLine($"❌ Error al registrar comandos: {ex.Message}");
+            Console.WriteLine($"? Error al registrar comandos: {ex.Message}");
         }
     }
 
@@ -257,7 +266,7 @@ class Program
         var query = command.Data.Options.First().Value as string;
         if (string.IsNullOrWhiteSpace(query))
         {
-            await SendErrorEmbedAsync(command, "Consulta vacía", "Proporciona un término de búsqueda.");
+            await SendErrorEmbedAsync(command, "Consulta vac�a", "Proporciona un t�rmino de b�squeda.");
             return;
         }
 
@@ -271,12 +280,12 @@ class Program
 
             if (results.Count == 0)
             {
-                await command.FollowupAsync("🔎 No se encontraron resultados.");
+                await command.FollowupAsync("?? No se encontraron resultados.");
                 return;
             }
 
             var embed = new EmbedBuilder()
-                .WithTitle($"🔎 Resultados para: {query}")
+                .WithTitle($"?? Resultados para: {query}")
                 .WithColor(Color.Blue);
 
             var comp = new ComponentBuilder();
@@ -286,7 +295,7 @@ class Program
             {
                 var duration = searchResult.Duration?.ToString(@"mm\:ss") ?? "??:??";
                 embed.AddField($"#{i} {searchResult.Title}", 
-                    $"{searchResult.Author.ChannelTitle} • {duration}", false);
+                    $"{searchResult.Author.ChannelTitle} � {duration}", false);
                 
                 // Usar | como separador en lugar de _ para evitar conflictos con IDs de YouTube
                 comp.WithButton($"Descargar #{i}", 
@@ -300,9 +309,9 @@ class Program
         catch (Exception ex)
         {
             var message = ex.Message.Contains("Exceeded request rate limit")
-                ? "YouTube está limitando las peticiones. Intenta de nuevo más tarde o configura `YOUTUBE_COOKIES` con cookies de un usuario autenticado."
+                ? "YouTube est� limitando las peticiones. Intenta de nuevo m�s tarde o configura `YOUTUBE_COOKIES` con cookies de un usuario autenticado."
                 : ex.Message;
-            await SendErrorEmbedAsync(command, "Error de búsqueda", message);
+            await SendErrorEmbedAsync(command, "Error de b�squeda", message);
         }
     }
 
@@ -311,7 +320,7 @@ class Program
         var url = command.Data.Options.First().Value as string;
         if (string.IsNullOrEmpty(url) || (!url.Contains("youtube.com") && !url.Contains("youtu.be")))
         {
-            await SendErrorEmbedAsync(command, "URL Inválida", "Proporciona una URL válida de YouTube.");
+            await SendErrorEmbedAsync(command, "URL Inv�lida", "Proporciona una URL v�lida de YouTube.");
             return;
         }
 
@@ -320,15 +329,15 @@ class Program
             var videoId = ExtractVideoId(url);
             if (string.IsNullOrEmpty(videoId))
             {
-                await SendErrorEmbedAsync(command, "URL Inválida", "No se pudo extraer el ID del video.");
+                await SendErrorEmbedAsync(command, "URL Inv�lida", "No se pudo extraer el ID del video.");
                 return;
             }
 
             var video = await _youtube!.Videos.GetAsync(videoId);
             
             var embed = new EmbedBuilder()
-                .WithTitle("🎵 Selecciona Formato y Calidad")
-                .WithDescription($"**{video.Title}**\n⏱️ {video.Duration?.ToString(@"mm\:ss")} • 👤 {video.Author.ChannelTitle}")
+                .WithTitle("?? Selecciona Formato y Calidad")
+                .WithDescription($"**{video.Title}**\n?? {video.Duration?.ToString(@"mm\:ss")} � ?? {video.Author.ChannelTitle}")
                 .WithThumbnailUrl(video.Thumbnails.FirstOrDefault()?.Url)
                 .WithColor(Color.Gold)
                 .Build();
@@ -336,13 +345,13 @@ class Program
             // Usar | como separador en lugar de _
             var menu = new SelectMenuBuilder()
                 .WithCustomId($"download|{command.User.Id}|{video.Id}")
-                .WithPlaceholder("🎚️ Selecciona calidad...")
-                .AddOption("🎵 MP3 - Audio (Alta)", "mp3_high", "Mejor calidad disponible")
-                .AddOption("🎵 MP3 - Audio (Media)", "mp3_medium", "Calidad estándar")
-                .AddOption("🎬 MP4 - Video 1080p", "mp4_1080", "Alta definición")
-                .AddOption("🎬 MP4 - Video 720p", "mp4_720", "HD estándar")
-                .AddOption("🎬 MP4 - Video 480p", "mp4_480", "Calidad media")
-                .AddOption("🎬 MP4 - Video 360p", "mp4_360", "Para ahorrar datos");
+                .WithPlaceholder("??? Selecciona calidad...")
+                .AddOption("?? MP3 - Audio (Alta)", "mp3_high", "Mejor calidad disponible")
+                .AddOption("?? MP3 - Audio (Media)", "mp3_medium", "Calidad est�ndar")
+                .AddOption("?? MP4 - Video 1080p", "mp4_1080", "Alta definici�n")
+                .AddOption("?? MP4 - Video 720p", "mp4_720", "HD est�ndar")
+                .AddOption("?? MP4 - Video 480p", "mp4_480", "Calidad media")
+                .AddOption("?? MP4 - Video 360p", "mp4_360", "Para ahorrar datos");
 
             var component = new ComponentBuilder()
                 .WithSelectMenu(menu)
@@ -352,7 +361,7 @@ class Program
         }
         catch (Exception ex)
         {
-            await SendErrorEmbedAsync(command, "Error", $"No se pudo obtener información del video: {ex.Message}");
+            await SendErrorEmbedAsync(command, "Error", $"No se pudo obtener informaci�n del video: {ex.Message}");
         }
     }
 
@@ -382,16 +391,16 @@ class Program
         var parts = component.Data.CustomId.Split('|');
         if (parts.Length != 3)
         {
-            await component.FollowupAsync("❌ Error en el formato del menú.", ephemeral: true);
+            await component.FollowupAsync("? Error en el formato del men�.", ephemeral: true);
             return;
         }
         
         var userId = ulong.Parse(parts[1]);
-        var videoId = parts[2]; // Ahora sí es el ID completo
+        var videoId = parts[2]; // Ahora s� es el ID completo
         
         if (component.User.Id != userId)
         {
-            await component.FollowupAsync("❌ Este menú no es tuyo.", ephemeral: true);
+            await component.FollowupAsync("? Este men� no es tuyo.", ephemeral: true);
             return;
         }
 
@@ -426,8 +435,8 @@ class Program
         {
             msg.Components = null;
             msg.Embed = new EmbedBuilder()
-                .WithTitle("✅ Agregado a la Cola")
-                .WithDescription($"Posición: **#{UserQueues[component.User.Id].Count}**\n⏳ Procesando...")
+                .WithTitle("? Agregado a la Cola")
+                .WithDescription($"Posici�n: **#{UserQueues[component.User.Id].Count}**\n? Procesando...")
                 .WithColor(Color.Green)
                 .Build();
         });
@@ -443,7 +452,7 @@ class Program
                 catch (Exception ex)
                 {
                     Console.WriteLine($"Error en ProcessDownload: {ex}");
-                    await component.Channel.SendMessageAsync($"❌ Error procesando descarga: {ex.Message}");
+                    await component.Channel.SendMessageAsync($"? Error procesando descarga: {ex.Message}");
                 }
                 finally
                 {
@@ -464,15 +473,15 @@ class Program
     private static async Task ProcessDownloadAsync(DownloadRequest request, SocketMessageComponent? component)
     {
         var statusMessage = component != null 
-            ? await request.Channel.SendMessageAsync($"⏳ Descargando **{request.VideoId}**...")
+            ? await request.Channel.SendMessageAsync($"? Descargando **{request.VideoId}**...")
             : null;
 
         try
         {
-            // Verificar que el ID sea válido antes de usarlo
+            // Verificar que el ID sea v�lido antes de usarlo
             if (string.IsNullOrWhiteSpace(request.VideoId) || request.VideoId.Length < 10)
             {
-                throw new Exception($"ID de video inválido: '{request.VideoId}'");
+                throw new Exception($"ID de video inv�lido: '{request.VideoId}'");
             }
 
             var video = await _youtube!.Videos.GetAsync(request.VideoId);
@@ -485,7 +494,7 @@ class Program
             if (request.Format == "mp3")
             {
                 var streamInfo = request.Quality == "high" 
-                    ? streamManifest.GetAudioOnlyStreams().GetWithHighestBitrate()
+                    ? streamManifest.GetAudioOnlyStreams().Cast<IStreamInfo>().GetWithHighestBitrate()
                     : streamManifest.GetAudioOnlyStreams().FirstOrDefault();
                 
                 if (streamInfo == null)
@@ -499,25 +508,26 @@ class Program
             }
             else
             {
-                var videoStreamInfo = request.Quality switch
+                var muxedStreams = streamManifest.GetMuxedStreams();
+                IStreamInfo? muxedStreamInfo = request.Quality switch
                 {
-                    "1080" => streamManifest.GetVideoStreams().FirstOrDefault(s => s.VideoQuality.Label.StartsWith("1080")),
-                    "720" => streamManifest.GetVideoStreams().FirstOrDefault(s => s.VideoQuality.Label.StartsWith("720")),
-                    "480" => streamManifest.GetVideoStreams().FirstOrDefault(s => s.VideoQuality.Label.StartsWith("480")),
-                    "360" => streamManifest.GetVideoStreams().FirstOrDefault(s => s.VideoQuality.Label.StartsWith("360")),
-                    _ => streamManifest.GetVideoStreams().GetWithHighestVideoQuality()
+                    "1080" => muxedStreams.FirstOrDefault(s => s.VideoQuality.Label.StartsWith("1080")),
+                    "720" => muxedStreams.FirstOrDefault(s => s.VideoQuality.Label.StartsWith("720")),
+                    "480" => muxedStreams.FirstOrDefault(s => s.VideoQuality.Label.StartsWith("480")),
+                    "360" => muxedStreams.FirstOrDefault(s => s.VideoQuality.Label.StartsWith("360")),
+                    _ => null
                 };
 
-                if (videoStreamInfo == null)
-                    videoStreamInfo = streamManifest.GetVideoStreams().GetWithHighestVideoQuality();
+                if (muxedStreamInfo == null)
+                    muxedStreamInfo = muxedStreams.GetWithHighestBitrate();
 
-                if (videoStreamInfo == null)
-                    throw new Exception("No se encontró stream de video disponible");
+                if (muxedStreamInfo == null)
+                    throw new Exception("No se encontró stream muxed disponible con audio para MP4.");
 
                 fileName = $"{SanitizeFileName(video.Title)}.mp4";
                 filePath = Path.Combine(TempDirectory, fileName);
                 
-                await _youtube.Videos.Streams.DownloadAsync(videoStreamInfo, filePath);
+                await _youtube.Videos.Streams.DownloadAsync(muxedStreamInfo, filePath);
                 fileSize = new FileInfo(filePath).Length;
             }
 
@@ -526,13 +536,13 @@ class Program
             {
                 File.Delete(filePath);
                 await request.Channel.SendMessageAsync(
-                    $"❌ El archivo ({FormatBytes(fileSize)}) excede el límite de {FormatBytes(maxSize)}.");
+                    $"? El archivo ({FormatBytes(fileSize)}) excede el l�mite de {FormatBytes(maxSize)}.");
                 return;
             }
 
             using var fileStream = new FileStream(filePath, FileMode.Open, FileAccess.Read);
             await request.Channel.SendFileAsync(fileStream, fileName, 
-                $"✅ **{video.Title}** descargado correctamente!");
+                $"? **{video.Title}** descargado correctamente!");
 
             if (!DownloadHistory.ContainsKey(video.Id))
             {
@@ -557,8 +567,8 @@ class Program
         {
             Console.WriteLine($"Error en descarga: {ex}");
             var userMessage = ex.Message.Contains("Exceeded request rate limit")
-                ? "❌ YouTube está limitando las peticiones. Intenta de nuevo más tarde o configura `YOUTUBE_COOKIES` con cookies de un usuario autenticado."
-                : $"❌ Error en la descarga: {ex.Message}";
+                ? "? YouTube est� limitando las peticiones. Intenta de nuevo m�s tarde o configura `YOUTUBE_COOKIES` con cookies de un usuario autenticado."
+                : $"? Error en la descarga: {ex.Message}";
             await request.Channel.SendMessageAsync(userMessage);
             if (statusMessage != null)
                 await statusMessage.DeleteAsync();
@@ -611,7 +621,7 @@ class Program
         var parts = component.Data.CustomId.Split('|');
         if (parts.Length != 3)
         {
-            await component.FollowupAsync("❌ Error en el formato del botón.", ephemeral: true);
+            await component.FollowupAsync("? Error en el formato del bot�n.", ephemeral: true);
             return;
         }
         
@@ -620,20 +630,20 @@ class Program
         
         if (component.User.Id != userId)
         {
-            await component.FollowupAsync("❌ Este botón no es tuyo.", ephemeral: true);
+            await component.FollowupAsync("? Este bot�n no es tuyo.", ephemeral: true);
             return;
         }
 
         var url = $"https://youtube.com/watch?v={videoId}";
         
         await component.FollowupAsync(
-            $"✅ **Video seleccionado!**\nUsa `/download url:{url}` para descargarlo.", 
+            $"? **Video seleccionado!**\nUsa `/download url:{url}` para descargarlo.", 
             ephemeral: true);
     }
 
     private static async Task HandlePlaylistAsync(SocketSlashCommand command)
     {
-        await command.FollowupAsync("📋 Función de playlist en desarrollo. Usa `/download` para videos individuales.");
+        await command.FollowupAsync("?? Funci�n de playlist en desarrollo. Usa `/download` para videos individuales.");
     }
 
     private static async Task HandleFullStatsAsync(SocketSlashCommand command)
@@ -646,17 +656,17 @@ class Program
             .FirstOrDefault();
         
         var embed = new EmbedBuilder()
-            .WithTitle("📊 Estadísticas del Servidor")
+            .WithTitle("?? Estad�sticas del Servidor")
             .WithDescription($"**{guild?.Name ?? "Servidor"}**")
-            .AddField("🚀 Nivel de Boost", GetBoostTierName(guild?.PremiumTier), true)
-            .AddField("📁 Límite de Archivos", FormatBytes(GetMaxFileSize(command.Channel)), true)
-            .AddField("⏱️ Rate Limit", $"{MAX_DOWNLOADS_PER_HOUR} descargas/hora por usuario", true)
-            .AddField("📥 Descargas Totales", totalDownloads.ToString(), true)
-            .AddField("📅 Descargas Hoy", todayDownloads.ToString(), true)
-            .AddField("🏆 Usuario Top", (topUser != null && topUser.Key != 0) ? $"<@{topUser.Key}> ({topUser.Count()} desc.)" : "Nadie", true)
-            .AddField("👥 Miembros", guild?.MemberCount.ToString() ?? "?", true)
-            .AddField("💎 Boosts", guild?.PremiumSubscriptionCount.ToString() ?? "0", true)
-            .AddField("📅 Creado", guild?.CreatedAt.ToString("dd/MM/yyyy") ?? "?", true)
+            .AddField("?? Nivel de Boost", GetBoostTierName(guild?.PremiumTier), true)
+            .AddField("?? L�mite de Archivos", FormatBytes(GetMaxFileSize(command.Channel)), true)
+            .AddField("?? Rate Limit", $"{MAX_DOWNLOADS_PER_HOUR} descargas/hora por usuario", true)
+            .AddField("?? Descargas Totales", totalDownloads.ToString(), true)
+            .AddField("?? Descargas Hoy", todayDownloads.ToString(), true)
+            .AddField("?? Usuario Top", (topUser != null && topUser.Key != 0) ? $"<@{topUser.Key}> ({topUser.Count()} desc.)" : "Nadie", true)
+            .AddField("?? Miembros", guild?.MemberCount.ToString() ?? "?", true)
+            .AddField("?? Boosts", guild?.PremiumSubscriptionCount.ToString() ?? "0", true)
+            .AddField("?? Creado", guild?.CreatedAt.ToString("dd/MM/yyyy") ?? "?", true)
             .WithThumbnailUrl(guild?.IconUrl ?? command.User.GetAvatarUrl())
             .WithColor(Color.Gold)
             .WithFooter($"Solicitado por {command.User.Username}")
@@ -674,12 +684,12 @@ class Program
             .ToList();
 
         var embed = new EmbedBuilder()
-            .WithTitle("🏆 Top 10 Videos Más Descargados")
+            .WithTitle("?? Top 10 Videos M�s Descargados")
             .WithColor(Color.Gold);
 
         if (top.Count == 0)
         {
-            embed.WithDescription("Aún no hay descargas registradas.");
+            embed.WithDescription("A�n no hay descargas registradas.");
         }
         else
         {
@@ -687,7 +697,7 @@ class Program
             foreach (var item in top)
             {
                 embed.AddField($"#{pos} {item.Value.Title}", 
-                    $"Descargado **{item.Value.Count}** veces • Última: {item.Value.Date:dd/MM/yy}", false);
+                    $"Descargado **{item.Value.Count}** veces � �ltima: {item.Value.Date:dd/MM/yy}", false);
                 pos++;
             }
         }
@@ -698,7 +708,7 @@ class Program
     private static async Task HandleLyricsAsync(SocketSlashCommand command)
     {
         var song = command.Data.Options.First().Value as string;
-        await command.FollowupAsync($"🎵 Buscando letras de: **{song}**...\n*(Función en desarrollo)*");
+        await command.FollowupAsync($"?? Buscando letras de: **{song}**...\n*(Funci�n en desarrollo)*");
     }
 
     private static async Task HandleThumbnailAsync(SocketSlashCommand command)
@@ -708,7 +718,7 @@ class Program
         
         if (string.IsNullOrWhiteSpace(url))
         {
-            await SendErrorEmbedAsync(command, "Error", "La URL no puede estar vacía");
+            await SendErrorEmbedAsync(command, "Error", "La URL no puede estar vac�a");
             return;
         }
         
@@ -717,7 +727,7 @@ class Program
             var videoId = ExtractVideoId(url);
             if (string.IsNullOrEmpty(videoId))
             {
-                await SendErrorEmbedAsync(command, "Error", "URL de YouTube inválida");
+                await SendErrorEmbedAsync(command, "Error", "URL de YouTube inv�lida");
                 return;
             }
 
@@ -730,7 +740,7 @@ class Program
             };
 
             var embed = new EmbedBuilder()
-                .WithTitle("🖼️ Miniatura del Video")
+                .WithTitle("??? Miniatura del Video")
                 .WithDescription($"[{video.Title}]({video.Url})")
                 .WithImageUrl(thumbnail?.Url)
                 .WithColor(Color.Blue)
@@ -746,7 +756,7 @@ class Program
 
     private static async Task HandleFavoritesAsync(SocketSlashCommand command)
     {
-        await command.FollowupAsync("⭐ Función de favoritos en desarrollo.", ephemeral: true);
+        await command.FollowupAsync("? Funci�n de favoritos en desarrollo.", ephemeral: true);
     }
 
     private static async Task HandleHistoryAsync(SocketSlashCommand command)
@@ -757,7 +767,7 @@ class Program
             .Take(5);
 
         var embed = new EmbedBuilder()
-            .WithTitle("📜 Tus Últimas Descargas")
+            .WithTitle("?? Tus �ltimas Descargas")
             .WithColor(Color.Blue);
 
         if (!userHistory.Any())
@@ -780,7 +790,7 @@ class Program
         var url = command.Data.Options.First().Value as string;
         if (string.IsNullOrEmpty(url))
         {
-            await SendErrorEmbedAsync(command, "Error", "URL no válida");
+            await SendErrorEmbedAsync(command, "Error", "URL no v�lida");
             return;
         }
         
@@ -795,14 +805,14 @@ class Program
 
             var video = await _youtube!.Videos.GetAsync(videoId);
             var embed = new EmbedBuilder()
-                .WithTitle("ℹ️ Información del Video")
+                .WithTitle("?? Informaci�n del Video")
                 .WithDescription($"**[{video.Title}]({video.Url})**")
-                .AddField("👤 Autor", video.Author.ChannelTitle, true)
-                .AddField("⏱️ Duración", video.Duration?.ToString(@"mm\:ss") ?? "N/A", true)
-                .AddField("📅 Fecha", video.UploadDate.ToString("dd/MM/yyyy"), true)
-                .AddField("👁️ Vistas", FormatNumber(video.Engagement.ViewCount), true)
-                .AddField("👍 Likes", FormatNumber(video.Engagement.LikeCount), true)
-                .AddField("📺 ID", $"`{video.Id}`", true)
+                .AddField("?? Autor", video.Author.ChannelTitle, true)
+                .AddField("?? Duraci�n", video.Duration?.ToString(@"mm\:ss") ?? "N/A", true)
+                .AddField("?? Fecha", video.UploadDate.ToString("dd/MM/yyyy"), true)
+                .AddField("??? Vistas", FormatNumber(video.Engagement.ViewCount), true)
+                .AddField("?? Likes", FormatNumber(video.Engagement.LikeCount), true)
+                .AddField("?? ID", $"`{video.Id}`", true)
                 .WithThumbnailUrl(video.Thumbnails.FirstOrDefault()?.Url)
                 .WithColor(Color.Red)
                 .Build();
@@ -819,12 +829,12 @@ class Program
     {
         if (!UserQueues.ContainsKey(command.User.Id) || UserQueues[command.User.Id].Count == 0)
         {
-            await command.FollowupAsync("📭 Tu cola está vacía.", ephemeral: true);
+            await command.FollowupAsync("?? Tu cola est� vac�a.", ephemeral: true);
             return;
         }
 
         var embed = new EmbedBuilder()
-            .WithTitle("📥 Tu Cola de Descargas")
+            .WithTitle("?? Tu Cola de Descargas")
             .WithDescription($"{UserQueues[command.User.Id].Count} pendiente(s)")
             .WithColor(Color.Blue);
 
@@ -844,11 +854,11 @@ class Program
         {
             var count = UserQueues[command.User.Id].Count;
             UserQueues[command.User.Id].Clear();
-            await command.FollowupAsync($"✅ Canceladas **{count}** descarga(s).", ephemeral: true);
+            await command.FollowupAsync($"? Canceladas **{count}** descarga(s).", ephemeral: true);
         }
         else
         {
-            await command.FollowupAsync("📭 No tienes descargas en cola.", ephemeral: true);
+            await command.FollowupAsync("?? No tienes descargas en cola.", ephemeral: true);
         }
     }
 
@@ -857,7 +867,7 @@ class Program
         try
         {
             var embed = new EmbedBuilder()
-                .WithTitle($"❌ {title}")
+                .WithTitle($"? {title}")
                 .WithDescription(desc)
                 .WithColor(Color.DarkRed)
                 .WithTimestamp(DateTimeOffset.Now)
@@ -876,7 +886,7 @@ class Program
     {
         PremiumTier.Tier1 => "Nivel 1 (25MB)",
         PremiumTier.Tier2 => "Nivel 2 (50MB)",
-        PremiumTier.Tier3 => "Nivel 3 (100MB) ⭐",
+        PremiumTier.Tier3 => "Nivel 3 (100MB) ?",
         _ => "Nivel 0 (8MB)"
     };
 
